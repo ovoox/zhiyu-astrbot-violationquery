@@ -66,7 +66,7 @@ class ViolationQueryPlugin(Star):
         """群聊消息处理器"""
         msg = event.message_str.strip()
         
-        if msg == "查违规":         
+        if msg in ["查违规", "违规查询"]:         
             first_data = await self._query_first_api(FIRST_API_URL)
             
             if first_data is None:

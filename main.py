@@ -70,7 +70,6 @@ class ViolationQueryPlugin(Star):
         
         if msg == "查违规":
             # 第一步：获取第一个接口的数据
-            yield event.chain_result([Plain(text="正在获取验证码链接...")])
             first_data = await self._query_first_api(FIRST_API_URL)
             
             if first_data is None:
@@ -83,14 +82,11 @@ class ViolationQueryPlugin(Star):
             
             if url and code:
                 yield event.chain_result([Plain(text=f"验证码链接: {url}")])
-                yield event.chain_result([Plain(text=f"获取到的code: {code}")])
                 
                 # 等待15秒
-                yield event.chain_result([Plain(text="等待15秒后查询最终结果...")])
                 await asyncio.sleep(15)
                 
                 # 第二步及后续：查询完整的违规记录
-                yield event.chain_result([Plain(text="正在查询最终结果...")])
                 final_result = await self._query_violation_data(code)
                 
                 yield event.chain_result([Plain(text=final_result)])

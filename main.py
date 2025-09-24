@@ -9,7 +9,7 @@ from astrbot.api.all import *
 PLUGIN_DIR = os.path.join('data', 'plugins', 'astrbot_plugin_violationquery')
 FIRST_API_URL = base64.b64decode("aHR0cDovL2FwaS5vY29hLmNuL2FwaS9xcWN3Zy9sb2dpbi5waHA=").decode()
 SECOND_API_URL = base64.b64decode("aHR0cDovL2FwaS5vY29hLmNuL2FwaS9xcWN3Zy9sb2dpbi5waHA=").decode()
-THIRD_API_URL = base64.b64decode("").decode()  # 需要添加第三个API的base64编码
+THIRD_API_URL = base64.b64decode("").decode()
 
 @register("violation_query", "知鱼", "查询QQ违规记录的插件", "1.0")
 class ViolationQueryPlugin(Star):
@@ -20,22 +20,15 @@ class ViolationQueryPlugin(Star):
         """查询第一个接口获取ticket和uin"""
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{FIRST_API_URL}{quote(code1)}") as response:
-                    if response.status == 200:
-                        text = await response.text()
-                        data = json.loads(text)
-                        
-                        if data.get('code') == -1001:
-                            return None, "链接1返回错误：-1001"
-                        
-                        if data.get('data') and data['data'].get('ticket') and data['data'].get('uin'):
-                            return {
-                                'ticket': data['data']['ticket'],
-                                'uin': data['data']['uin']
-                            }, None
-                        return None, "获取ticket和uin失败"
-                    else:
-                        return None, f"第一个接口状态码：{response.status}"
+                async with session.get(f"{FIRST_API_URL}{quote(code1)}") as response2:
+                    text2 = await response2.text()
+                    json内容2 = json.loads(text2)
+                    
+                    if json内容2['data'] and json内容2['data']['ticket'] and json内容2['data']['uin']:
+                        ticket = json内容2['data']['ticket']
+                        uin = json内容2['data']['uin']
+                        return {'ticket': ticket, 'uin': uin}, None
+                    return None, "获取ticket和uin失败"
         except Exception as e:
             self.context.logger.error(f"第一个API查询失败: {str(e)}")
             return None, f"第一个接口查询失败: {str(e)}"
@@ -44,22 +37,15 @@ class ViolationQueryPlugin(Star):
         """查询第二个接口获取openid和minico_token"""
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{SECOND_API_URL}{quote(ticket)}") as response:
-                    if response.status == 200:
-                        text = await response.text()
-                        data = json.loads(text)
-                        
-                        if data.get('retcode') == 100016:
-                            return None, "链接2返回错误：invalid code2session result"
-                        
-                        if data.get('openid') and data.get('minico_token'):
-                            return {
-                                'openid': data['openid'],
-                                'minico_token': data['minico_token']
-                            }, None
-                        return None, "获取openid和minico_token失败"
-                    else:
-                        return None, f"第二个接口状态码：{response.status}"
+                async with session.get(f"{SECOND_API_URL}{quote(ticket)}") as response3:
+                    text3 = await response3.text()
+                    json内容3 = json.loads(text3)
+                    
+                    if json内容3['openid'] and json内容3['minico_token']:
+                        openid = json内容3['openid']
+                        minico_token = json内容3['minico_token']
+                        return {'openid': openid, 'minico_token': minico_token}, None
+                    return None, "获取openid和minico_token失败"
         except Exception as e:
             self.context.logger.error(f"第二个API查询失败: {str(e)}")
             return None, f"第二个接口查询失败: {str(e)}"
@@ -69,16 +55,9 @@ class ViolationQueryPlugin(Star):
         try:
             async with aiohttp.ClientSession() as session:
                 url = f"{THIRD_API_URL}{quote(openid)}&token={quote(minico_token)}&uin={quote(uin)}"
-                async with session.get(url) as response:
-                    if response.status == 200:
-                        text = await response.text()
-                        
-                        if "状态失效" in text:
-                            return None, "状态失效，请重新登录！"
-                        
-                        return text, None
-                    else:
-                        return None, f"第三个接口状态码：{response.status}"
+                async with session.get(url) as response4:
+                    text4 = await response4.text()
+                    return text4, None
         except Exception as e:
             self.context.logger.error(f"第三个API查询失败: {str(e)}")
             return None, f"第三个接口查询失败: {str(e)}"
@@ -89,10 +68,8 @@ class ViolationQueryPlugin(Star):
         msg = event.message_str.strip()
         
         if msg == "查违规":
-            # 第一步：获取验证码（这里假设code1需要先获取）
-            yield event.chain_result([Plain(text="正在获取验证码...")])
-            # 这里需要先获取code1的逻辑，暂时用固定值示例
-            code1 = "example_code1"
+            # 这里需要先获取code1，暂时用固定值
+            code1 = "需要获取的code1值"
             
             # 第一步：获取ticket和uin
             yield event.chain_result([Plain(text="正在获取登录凭证...")])
@@ -125,9 +102,3 @@ class ViolationQueryPlugin(Star):
             # 返回结果
             完整内容 = f"{third_result}\n因考虑到霸屏缘故 违规内容只返回十条"
             yield event.chain_result([Plain(text=完整内容)])
-
-# 如果需要单独获取code1的逻辑，可以添加以下方法
-async def get_code1():
-    """获取第一个验证码的逻辑"""
-    # 这里需要实现获取code1的具体逻辑
-    return "example_code1"

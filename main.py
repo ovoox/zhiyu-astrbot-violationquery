@@ -77,8 +77,7 @@ class ViolationQueryPlugin(Star):
             code = first_data.get("code", "")
             
             if url and code:
-                yield event.chain_result([Plain(text=f"请在15秒内点击下方链接完成确认\n: {url}")])
-                yield event.chain_result([Plain(text="正在查询中...")])
+                yield event.chain_result([Plain(text=f"请在15秒内点击下方链接完成确认: \n{url}")])
                 
                 await asyncio.sleep(15)
                 

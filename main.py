@@ -20,7 +20,7 @@ class ViolationQueryPlugin(Star):
                 async with session.get(api_url) as response:
                     if response.status == 200:
                         data = await response.json()
-                        return data  # 返回完整的JSON数据
+                        return data  
                     else:
                         return None
         except Exception as e:
@@ -31,7 +31,7 @@ class ViolationQueryPlugin(Star):
         """查询完整的违规记录数据链"""
         try:
             async with aiohttp.ClientSession() as session:
-                # 第二步：使用code获取ticket和uin
+               
                 response2 = await session.get(f"http://api.ocoa.cn/api/qqcwg/login.php?type=1&code={code}")
                 text2 = await response2.text()
                 json_data2 = json.loads(text2)
@@ -40,7 +40,6 @@ class ViolationQueryPlugin(Star):
                     ticket = json_data2["data"]["ticket"]
                     uin = json_data2["data"]["uin"]
                     
-                    # 第三步：获取openid和minico_token
                     response3 = await session.get(f"http://api.ocoa.cn/api/qqcwg/safety.php?type=1&ticket={ticket}")
                     text3 = await response3.text()
                     json_data3 = json.loads(text3)
@@ -48,17 +47,16 @@ class ViolationQueryPlugin(Star):
                     if json_data3.get("openid") and json_data3.get("minico_token"):
                         openid = json_data3["openid"]
                         minico_token = json_data3["minico_token"]
-                        
-                        # 第四步：获取最终的违规记录
+                         
                         response4 = await session.get(f"http://api.ocoa.cn/api/qqcwg/safety.php?type=2&id={openid}&token={minico_token}&uin={uin}")
                         text4 = await response4.text()
                         
                         full_content = f"{text4}\n因考虑到霸屏缘故 违规内容只返回十条"
                         return full_content
                     else:
-                        return "未获取到openid或minico_token"
+                        return "未确认查询失败"
                 else:
-                    return "未获取到ticket或uin"
+                    return "未确认查询失败"
         except Exception as e:
             self.context.logger.error(f"违规记录查询失败: {str(e)}")
             return f"查询过程中发生错误: {str(e)}"
@@ -68,25 +66,22 @@ class ViolationQueryPlugin(Star):
         """群聊消息处理器"""
         msg = event.message_str.strip()
         
-        if msg == "查违规":
-            # 第一步：获取第一个接口的数据
+        if msg == "查违规":         
             first_data = await self._query_first_api(FIRST_API_URL)
             
             if first_data is None:
                 yield event.chain_result([Plain(text="获取验证码链接失败")])
                 return
-            
-            # 发送URL链接给用户
+           
             url = first_data.get("url", "")
             code = first_data.get("code", "")
             
             if url and code:
-                yield event.chain_result([Plain(text=f"验证码链接: {url}")])
+                yield event.chain_result([Plain(text=f"请在15秒内点击下方链接完成确认\n: {url}")])
+                yield event.chain_result([Plain(text="正在查询中...")])
                 
-                # 等待15秒
                 await asyncio.sleep(15)
                 
-                # 第二步及后续：查询完整的违规记录
                 final_result = await self._query_violation_data(code)
                 
                 yield event.chain_result([Plain(text=final_result)])

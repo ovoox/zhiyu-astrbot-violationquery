@@ -1,5 +1,5 @@
-name: zhiyu-astrbot-beautyvideo # 这是你的插件的唯一识别名。
-desc: 一款QQ随机美女视频的AstrBot插件 # 插件简短描述
-version: v2.0 # 插件版本号。格式：v1.1.1 或者 v1.1
+name: zhiyu-astrbot-violationquery # 这是你的插件的唯一识别名。
+desc: 一款QQ违规记录查询的AstrBot插件
+version: v1.0 # 插件版本号。格式：v1.1.1 或者 v1.1
 author: 知鱼 # 作者
-repo: https://github.com/ovoox/zhiyu-astrbot-beautyvideo # 插件的仓库地址
+repo: https://github.com/ovoox/zhiyu-astrbot-violationquery # 插件的仓库地址

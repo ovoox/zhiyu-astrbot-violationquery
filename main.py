@@ -7,6 +7,9 @@ from astrbot.api.all import *
 
 PLUGIN_DIR = os.path.join('data', 'plugins', 'astrbot_plugin_violationquery')
 FIRST_API_URL = base64.b64decode("aHR0cDovL2FwaS5vY29hLmNuL2FwaS9xcWN3Zy9sb2dpbi5waHA=").decode()
+LOGIN_API_URL = base64.b64decode("aHR0cDovL2FwaS5vY29hLmNuL2FwaS9xcWN3Zy9sb2dpbi5waHA/dHlwZT0x").decode()
+SAFETY_API_URL = base64.b64decode("aHR0cDovL2FwaS5vY29hLmNuL2FwaS9xcWN3Zy9zYWZldHkucGhwP3R5cGU9MQ==").decode()
+FINAL_API_URL = base64.b64decode("aHR0cDovL2FwaS5vY29hLmNuL2FwaS9xcWN3Zy9zYWZldHkucGhwP3R5cGU9Mg==").decode()
 
 @register("violation_query", "知鱼", "查询QQ违规记录的插件", "1.0")
 class ViolationQueryPlugin(Star):
@@ -32,7 +35,7 @@ class ViolationQueryPlugin(Star):
         try:
             async with aiohttp.ClientSession() as session:
                
-                response2 = await session.get(f"http://api.ocoa.cn/api/qqcwg/login.php?type=1&code={code}")
+                response2 = await session.get(f"{LOGIN_API_URL}&code={code}")
                 text2 = await response2.text()
                 json_data2 = json.loads(text2)
                 
@@ -40,7 +43,7 @@ class ViolationQueryPlugin(Star):
                     ticket = json_data2["data"]["ticket"]
                     uin = json_data2["data"]["uin"]
                     
-                    response3 = await session.get(f"http://api.ocoa.cn/api/qqcwg/safety.php?type=1&ticket={ticket}")
+                    response3 = await session.get(f"{SAFETY_API_URL}&ticket={ticket}")
                     text3 = await response3.text()
                     json_data3 = json.loads(text3)
                     
@@ -48,7 +51,7 @@ class ViolationQueryPlugin(Star):
                         openid = json_data3["openid"]
                         minico_token = json_data3["minico_token"]
                          
-                        response4 = await session.get(f"http://api.ocoa.cn/api/qqcwg/safety.php?type=2&id={openid}&token={minico_token}&uin={uin}")
+                        response4 = await session.get(f"{FINAL_API_URL}&id={openid}&token={minico_token}&uin={uin}")
                         text4 = await response4.text()
                         
                         full_content = f"{text4}\n因考虑到霸屏缘故 违规内容只返回十条"

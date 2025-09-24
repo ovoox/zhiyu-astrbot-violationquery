@@ -14,15 +14,13 @@ class ViolationQueryPlugin(Star):
         super().__init__(context)
     
     async def _query_first_api(self, api_url: str):
-        """查询第一个接口获取code"""
+        """查询第一个接口获取URL和code"""
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(api_url) as response:
                     if response.status == 200:
                         data = await response.json()
-                        if "code" in data:
-                            return data["code"]
-                        return None
+                        return data  # 返回完整的JSON数据
                     else:
                         return None
         except Exception as e:
@@ -71,23 +69,30 @@ class ViolationQueryPlugin(Star):
         msg = event.message_str.strip()
         
         if msg == "查违规":
-            # 第一步：获取code
-            yield event.chain_result([Plain(text="正在获取验证码...")])
-            code = await self._query_first_api(FIRST_API_URL)
+            # 第一步：获取第一个接口的数据
+            yield event.chain_result([Plain(text="正在获取验证码链接...")])
+            first_data = await self._query_first_api(FIRST_API_URL)
             
-            if code is None:
-                yield event.chain_result([Plain(text="获取验证码失败")])
+            if first_data is None:
+                yield event.chain_result([Plain(text="获取验证码链接失败")])
                 return
             
-            # 显示获取到的code
-            yield event.chain_result([Plain(text=f"获取到验证码: {code}")])
+            # 发送URL链接给用户
+            url = first_data.get("url", "")
+            code = first_data.get("code", "")
             
-            # 等待15秒
-            yield event.chain_result([Plain(text="等待15秒后查询最终结果...")])
-            await asyncio.sleep(15)
-            
-            # 第二步及后续：查询完整的违规记录
-            yield event.chain_result([Plain(text="正在查询最终结果...")])
-            final_result = await self._query_violation_data(code)
-            
-            yield event.chain_result([Plain(text=final_result)])
+            if url and code:
+                yield event.chain_result([Plain(text=f"验证码链接: {url}")])
+                yield event.chain_result([Plain(text=f"获取到的code: {code}")])
+                
+                # 等待15秒
+                yield event.chain_result([Plain(text="等待15秒后查询最终结果...")])
+                await asyncio.sleep(15)
+                
+                # 第二步及后续：查询完整的违规记录
+                yield event.chain_result([Plain(text="正在查询最终结果...")])
+                final_result = await self._query_violation_data(code)
+                
+                yield event.chain_result([Plain(text=final_result)])
+            else:
+                yield event.chain_result([Plain(text="获取到的数据不完整")])

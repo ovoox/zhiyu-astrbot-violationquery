@@ -1,15 +1,14 @@
 import os
 import aiohttp
 import asyncio
-import base64
 import json
 from astrbot.api.all import *
 
 PLUGIN_DIR = os.path.join('data', 'plugins', 'astrbot_plugin_violationquery')
-FIRST_API_URL = base64.b64decode("aHR0cDovL2FwaS5vY29hLmNuL2FwaS9xcWN3Zy9sb2dpbi5waHA=").decode()
-LOGIN_API_URL = base64.b64decode("aHR0cDovL2FwaS5vY29hLmNuL2FwaS9xcWN3Zy9sb2dpbi5waHA/dHlwZT0x").decode()
-SAFETY_API_URL = base64.b64decode("aHR0cDovL2FwaS5vY29hLmNuL2FwaS9xcWN3Zy9zYWZldHkucGhwP3R5cGU9MQ==").decode()
-FINAL_API_URL = base64.b64decode("aHR0cDovL2FwaS5vY29hLmNuL2FwaS9xcWN3Zy9zYWZldHkucGhwP3R5cGU9Mg==").decode()
+FIRST_API_URL = "http://api.ocoa.cn/api/qqcwg/login.php"
+LOGIN_API_URL = "http://api.ocoa.cn/api/qqcwg/login.php?type=1"
+SAFETY_API_URL = "http://api.ocoa.cn/api/qqcwg/safety.php?type=1"
+FINAL_API_URL = "http://api.ocoa.cn/api/qqcwg/safety.php?type=2"
 
 @register("violation_query", "知鱼", "查询QQ违规记录的插件", "1.0")
 class ViolationQueryPlugin(Star):
@@ -17,7 +16,6 @@ class ViolationQueryPlugin(Star):
         super().__init__(context)
     
     async def _query_first_api(self, api_url: str):
-        """查询第一个接口获取URL和code"""
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(api_url) as response:
@@ -31,10 +29,8 @@ class ViolationQueryPlugin(Star):
             return None
     
     async def _query_violation_data(self, code: str):
-        """查询完整的违规记录数据链"""
         try:
             async with aiohttp.ClientSession() as session:
-               
                 response2 = await session.get(f"{LOGIN_API_URL}&code={code}")
                 text2 = await response2.text()
                 json_data2 = json.loads(text2)
@@ -66,7 +62,6 @@ class ViolationQueryPlugin(Star):
     
     @event_message_type(EventMessageType.GROUP_MESSAGE)
     async def on_group_message(self, event: AstrMessageEvent):
-        """群聊消息处理器"""
         msg = event.message_str.strip()
         
         if msg in ["查违规", "违规查询"]:         

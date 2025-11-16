@@ -10,7 +10,7 @@ LOGIN_API_URL = "http://api.ocoa.cn/api/qqcwg/login.php?type=1"
 SAFETY_API_URL = "http://api.ocoa.cn/api/qqcwg/safety.php?type=1"
 FINAL_API_URL = "http://api.ocoa.cn/api/qqcwg/safety.php?type=2"
 
-@register("violation_query", "知鱼", "查询QQ违规记录的插件", "1.0")
+@register("zhiyu-astrbot-violationquery", "知鱼", "一款QQ违规记录查询的AstrBot插件", "1.0")
 class ViolationQueryPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
